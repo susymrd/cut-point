@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <title>Estimasi Waktu Cut Point</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 p-6">
+
+  <div class="max-w-3xl mx-auto bg-white rounded-xl shadow-md p-6 relative">
+    <!-- Logo -->
+    <div class="absolute top-4 right-4">
+      <img src="image.png" alt="Logo Pertamina Patra Niaga" class="h-16 w-auto">
+    </div>
+
+    <h2 class="text-2xl font-bold text-center mb-6 mt-6">Estimasi Waktu Cut Point</h2>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-4">
+      <div class="space-y-4">
+        <div>
+          <label class="block font-medium">Flowrate (kL/h):</label>
+          <input id="flowrate" type="number" placeholder="Contoh: 1200"
+            class="w-full border rounded p-2">
+        </div>
+
+        <div>
+          <label class="block font-medium">Diameter Pipa (inch):</label>
+          <input id="diameter" type="number" placeholder="Contoh: 16"
+            class="w-full border rounded p-2">
+        </div>
+
+        <div>
+          <label class="block font-medium">Jarak dari densitometer ke rumah manifold (meter):</label>
+          <input id="jarak" type="number" placeholder="Contoh: 220"
+            class="w-full border rounded p-2">
+        </div>
+
+        <button onclick="hitung()" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 w-full">
+          Mulai Perhitungan
+        </button>
+        <button onclick="mulaiCountdown()" id="btnCountdown" class="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 w-full">
+          ▶️ Mulai Countdown
+        </button>
+        <button onclick="resetTimer()" class="bg-yellow-500 text-white px-4 py-2 rounded hover:bg-yellow-600 w-full">
+          🔄 Ulangi Timer
+        </button>
+      </div>
+
+      <!-- Output dan Timer -->
+      <div>
+        <div class="bg-gray-100 p-4 rounded text-sm whitespace-pre-line mb-4" id="hasil">
+          <!-- Hasil perhitungan akan muncul di sini -->
+        </div>
+        <div class="text-center mt-4">
+          <p class="text-lg font-semibold">⏱️ Countdown:</p>
+          <p id="countdownDisplay" class="text-3xl font-bold text-red-600 mt-2">00.00</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let waktuEstimasi = 0;
+    let countdownInterval;
+
+    function hitung() {
+      const Q_kLh = parseFloat(document.getElementById("flowrate").value);
+      const D_inch = parseFloat(document.getElementById("diameter").value);
+      const jarak = parseFloat(document.getElementById("jarak").value);
+
+      if (!Q_kLh || !D_inch || !jarak) {
+        document.getElementById("hasil").innerText = "Mohon isi semua kolom input.";
+        return;
+      }
+
+      const Q_m3s = Q_kLh / 3600;
+      const D_m = D_inch * 0.0254;
+      const luas = Math.PI * Math.pow((D_m / 2), 2);
+      const v = Q_m3s / luas;
+      waktuEstimasi = jarak / v;
+
+      document.getElementById("hasil").innerText =
+        `🔢 Flowrate: ${Q_m3s.toFixed(3)} m³/s
+📏 Diameter pipa: ${D_m.toFixed(3)} meter
+🟫 Luas penampang: ${luas.toFixed(4)} m²
+💨 Kecepatan aliran: ${v.toFixed(2)} m/s
+
+🏠 Jarak densitometer ke rumah manifold: ${jarak} meter
+⏱️ Estimasi waktu tempuh: ${waktuEstimasi.toFixed(2)} detik`;
+
+      document.getElementById("countdownDisplay").textContent = waktuEstimasi.toFixed(2).padStart(5, '0');
+    }
+
+    function mulaiCountdown() {
+      let time = waktuEstimasi;
+
+      if (!time || time <= 0) {
+        document.getElementById("countdownDisplay").textContent = "00.00";
+        return;
+      }
+
+      clearInterval(countdownInterval);
+
+      countdownInterval = setInterval(() => {
+        if (time <= 0) {
+          clearInterval(countdownInterval);
+          document.getElementById("countdownDisplay").textContent = "00.00";
+        } else {
+          time -= 0.1;
+          document.getElementById("countdownDisplay").textContent = time.toFixed(2).padStart(5, '0');
+        }
+      }, 100);
+    }
+
+    function resetTimer() {
+      clearInterval(countdownInterval);
+      document.getElementById("countdownDisplay").textContent = waktuEstimasi.toFixed(2).padStart(5, '0');
+    }
+  </script>
+
+</body>
+</html>
