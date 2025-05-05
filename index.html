@@ -3,8 +3,16 @@
 <head>
   <meta charset="UTF-8">
   <title>Estimasi Waktu Cut Point</title>
-  <link rel="shortcut icon" type="x-icon" href="logoPtm.png">
   <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    .fade-in {
+      animation: fadeIn 0.5s ease-in-out;
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(-10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+  </style>
 </head>
 <body class="bg-gray-100 p-6">
 
@@ -20,31 +28,27 @@
       <div class="space-y-4">
         <div>
           <label class="block font-medium">Flowrate (kL/h):</label>
-          <input id="flowrate" type="number" placeholder="Contoh: 1200"
-            class="w-full border rounded p-2">
+          <input id="flowrate" type="number" placeholder="Contoh: 1200" class="w-full border rounded p-2">
         </div>
 
         <div>
           <label class="block font-medium">Diameter Pipa (inch):</label>
-          <input id="diameter" type="number" placeholder="Contoh: 16"
-            class="w-full border rounded p-2">
+          <input id="diameter" type="number" placeholder="Contoh: 16" class="w-full border rounded p-2">
         </div>
 
         <div>
           <label class="block font-medium">Jarak dari densitometer ke rumah manifold (meter):</label>
-          <input id="jarak" type="number" placeholder="Contoh: 220"
-            class="w-full border rounded p-2">
+          <input id="jarak" type="number" placeholder="Contoh: 220" class="w-full border rounded p-2">
         </div>
 
-        <button onclick="hitung()" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 w-full">
-          Mulai Perhitungan
-        </button>
-        <button onclick="mulaiCountdown()" id="btnCountdown" class="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 w-full">
-          ▶️ Mulai Countdown
-        </button>
-        <button onclick="resetTimer()" class="bg-yellow-500 text-white px-4 py-2 rounded hover:bg-yellow-600 w-full">
-          🔄 Ulangi Timer
-        </button>
+  
+	<button onclick="mulaiCountdown()" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 w-full">
+  		Mulai Countdown
+	</button>
+	<button onclick="resetTimer()" class="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700 w-full">
+  		Ulangi Timer
+	</button>
+
       </div>
 
       <!-- Output dan Timer -->
@@ -60,17 +64,36 @@
     </div>
   </div>
 
+  <!-- Popup Custom -->
+  <div id="popupSwitch" class="hidden fixed bottom-6 left-1/2 transform -translate-x-1/2 bg-red-600 text-white px-6 py-4 rounded-xl shadow-lg text-lg font-semibold z-50 fade-in">
+    ⚠️ Lakukan Switching Valve Sekarang!
+  </div>
+
   <script>
     let waktuEstimasi = 0;
     let countdownInterval;
 
+    const flowrateInput = document.getElementById("flowrate");
+    const diameterInput = document.getElementById("diameter");
+    const jarakInput = document.getElementById("jarak");
+
+    const popup = document.getElementById("popupSwitch");
+
+    [flowrateInput, diameterInput, jarakInput].forEach(input => {
+      input.addEventListener("input", hitung);
+    });
+
     function hitung() {
-      const Q_kLh = parseFloat(document.getElementById("flowrate").value);
-      const D_inch = parseFloat(document.getElementById("diameter").value);
-      const jarak = parseFloat(document.getElementById("jarak").value);
+      const Q_kLh = parseFloat(flowrateInput.value);
+      const D_inch = parseFloat(diameterInput.value);
+      const jarak = parseFloat(jarakInput.value);
 
       if (!Q_kLh || !D_inch || !jarak) {
         document.getElementById("hasil").innerText = "Mohon isi semua kolom input.";
+        waktuEstimasi = 0;
+        document.getElementById("countdownDisplay").textContent = "00.00";
+        hidePopup();
+        clearInterval(countdownInterval);
         return;
       }
 
@@ -94,6 +117,7 @@
 
     function mulaiCountdown() {
       let time = waktuEstimasi;
+      hidePopup();
 
       if (!time || time <= 0) {
         document.getElementById("countdownDisplay").textContent = "00.00";
@@ -106,8 +130,16 @@
         if (time <= 0) {
           clearInterval(countdownInterval);
           document.getElementById("countdownDisplay").textContent = "00.00";
+          hidePopup();
         } else {
           time -= 0.1;
+
+          if (time <= 20) {
+            showPopup();
+          } else {
+            hidePopup();
+          }
+
           document.getElementById("countdownDisplay").textContent = time.toFixed(2).padStart(5, '0');
         }
       }, 100);
@@ -115,7 +147,20 @@
 
     function resetTimer() {
       clearInterval(countdownInterval);
-      document.getElementById("countdownDisplay").textContent = waktuEstimasi.toFixed(2).padStart(5, '0');
+      hidePopup();
+      if (waktuEstimasi > 0) {
+        document.getElementById("countdownDisplay").textContent = waktuEstimasi.toFixed(2).padStart(5, '0');
+      } else {
+        document.getElementById("countdownDisplay").textContent = "00.00";
+      }
+    }
+
+    function showPopup() {
+      popup.classList.remove("hidden");
+    }
+
+    function hidePopup() {
+      popup.classList.add("hidden");
     }
   </script>
 
